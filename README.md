@@ -10,3 +10,5 @@ To check the environment, run command below from ```pacman_multiagent/``` direct
 <pre>
 python pacman.py -p ReflexAgent
 </pre>
+
+We have to implement two classes ```MonteCarloTreeSearchAgent``` and ```ReinforcementLearningAgent``` from ```pacman_multiagent/multiAgents.py``` file
