@@ -134,8 +134,6 @@ class MCTSInterface(Agent, object):
 
             self._children = []
             self._possible_actions = []
-            if self._game_state.isLose():
-                print(self._game_state.getLegalActions())
             for u in self._game_state.getLegalActions():
                 self._possible_actions.append(u)
 
@@ -268,17 +266,22 @@ class MCTSAsInHW(MCTSInterface):
               n_iter < self._max_simulation_iterations:
             if nearest_food is None:
                 nearest_food = find_nearest_food(game_state)
-            best_dist = None
-            best_next_state = None
-            for action in game_state.getLegalActions():
-                next_state = game_state.generatePacmanSuccessor(action)
-                curr_dist = dist_l1(next_state.getPacmanPosition(), nearest_food)
-                if best_dist is None or curr_dist < best_dist:
-                    best_dist = curr_dist
-                    best_next_state = next_state
-            game_state = best_next_state
-            if game_state.getPacmanPosition() == nearest_food:
-                nearest_food = None
+            if nearest_food is None:
+                game_state = game_state.generatePacmanSuccessor(
+                        random.choice(game_state.getLegalActions())
+                )
+            else:
+                best_dist = None
+                best_next_state = None
+                for action in game_state.getLegalActions():
+                    next_state = game_state.generatePacmanSuccessor(action)
+                    curr_dist = dist_l1(next_state.getPacmanPosition(), nearest_food)
+                    if best_dist is None or curr_dist < best_dist:
+                        best_dist = curr_dist
+                        best_next_state = next_state
+                game_state = best_next_state
+                if game_state.getPacmanPosition() == nearest_food:
+                    nearest_food = None
             n_iter += 1
         return game_state.getScore()
 
