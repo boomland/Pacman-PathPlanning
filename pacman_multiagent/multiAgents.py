@@ -15,6 +15,7 @@
 from util import manhattanDistance
 from game import Directions
 import random, util
+import math
 
 from game import Agent
 
@@ -134,8 +135,13 @@ class MCTSInterface(Agent, object):
 
             self._children = []
             self._possible_actions = []
-            for u in self._game_state.getLegalActions():
-                self._possible_actions.append(u)
+            if self._game_state.isLose():
+                self._total_reward = -200
+                self._n_backpropagations = 1
+            else:
+                for u in self._game_state.getLegalActions():
+                    if u != 'Stop':
+                        self._possible_actions.append(u)
 
         # Derived class should implement this method
         def select(self):
@@ -145,11 +151,11 @@ class MCTSInterface(Agent, object):
         def expand(self):
             util.raiseNotDefined()
 
-        def backpropagate(self, reward):
-            self._n_backpropagations += 1
-            self._total_reward += reward
+        def backpropagate(self, reward, depth=1):
+            self._n_backpropagations += 1 / math.sqrt(depth)
+            self._total_reward += reward * 1 / math.sqrt(depth)
             if self._parent is not None:
-                self._parent.backpropagate(reward)
+                self._parent.backpropagate(reward, depth=depth + 1)
 
         def get_game_state(self):
             return self._game_state.deepCopy()
@@ -192,7 +198,7 @@ class MCTSInterface(Agent, object):
 
         @property
         def _best_child(self):
-            best_childs = self._children[0]
+            best_childs = []
             best_score = None
             for curr_child in self._children:
                 if best_score is None or curr_child._average_reward > best_score:
@@ -207,10 +213,15 @@ class MCTSInterface(Agent, object):
             return self._best_child._action
 
     def __init__(self):
-        self._max_mcts_iterations = 50
-        self._max_simulation_iterations = 5
+        self.first_time = True
+        self._max_mcts_iterations = 200
+        self._max_simulation_iterations = 1
 
     def getAction(self, gameState):
+        if self.first_time:
+            import time
+            time.sleep(5)
+            self.first_time = False
         root = self.create_tree(gameState)
         for _ in range(self._max_mcts_iterations):
             selected_node = root.select()
@@ -218,10 +229,6 @@ class MCTSInterface(Agent, object):
             reward = self.simulate(expanded_node.get_game_state())
             expanded_node.backpropagate(reward)
         action = root.choose_best_action()
-        # if action == 'Stop':
-        #     for child in root._children:
-        #         print "action '{}', reward = {}, n = {}".format(
-        #                 child._action, child._average_reward, child._n_backpropagations)
         return action
 
     # Implement this in derived class
@@ -255,8 +262,8 @@ class MCTSAsInHW(MCTSInterface):
                 action = self._possible_actions[0]
                 self._possible_actions.pop(0)
                 next_game_state = self._game_state.generatePacmanSuccessor(action)
-                if next_game_state.getPacmanPosition() in self._visited_states:
-                    continue
+                # if next_game_state.getPacmanPosition() in self._visited_states:
+                #     continue
                 expanded_child = self.__class__(
                     game_state=self._game_state.generatePacmanSuccessor(action),
                     parent=self,
