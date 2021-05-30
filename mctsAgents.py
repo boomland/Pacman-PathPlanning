@@ -213,7 +213,7 @@ class MCTSAsInHW(MCTSInterface):
         return game_state.getScore()
 
 
-class MCTS_USB(MCTSInterface):
+class MCTS_UCB(MCTSInterface):
     """
       A MCTS agent chooses an action using Monte-Carlo Tree Search.
     """
