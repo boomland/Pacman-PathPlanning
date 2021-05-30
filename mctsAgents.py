@@ -5,6 +5,34 @@ from environment.util import manhattanDistance
 from environment.game import Directions, Agent
 import environment.util as util
 
+def scoreEvaluationFunction(currentGameState):
+    newPos = currentGameState.getPacmanPosition()
+    newFood = currentGameState.getFood()
+    newGhostStates = currentGameState.getGhostStates()
+
+    foodPos = newFood.asList()
+    foodCount = len(foodPos)
+
+    score = currentGameState.getScore()
+
+    closestDistance = 1e6
+    for i in range(foodCount):
+        distance = manhattanDistance(newPos, foodPos[i]) + foodCount * 100
+        if distance < closestDistance:
+            closestDistance = distance
+            closestFood = foodPos
+    
+    if foodCount == 0:
+        closestDistance = 0
+    
+    score -= closestDistance
+
+    for i in range(len(newGhostStates)):
+        ghostPos = currentGameState.getGhostPosition(i+1)
+        if manhattanDistance(newPos, ghostPos) <= 1:
+            score -= 1e6
+
+    return score
 
 class MCTSInterface(Agent, object):
     class Node(object):
@@ -102,6 +130,10 @@ class MCTSInterface(Agent, object):
         # Useful helper
         def choose_best_action(self):
             return self._best_child._action
+        
+        def choose_best_action_max(self):
+            L = [n._total_reward for n in self._children]
+            return self._children[L.index(max(L))]._action
 
     def __init__(self):
         self.first_time = True
@@ -129,10 +161,9 @@ class MCTSInterface(Agent, object):
     # Reimplement this in derived class if needed
     def simulate(self, gameState):
         # Do not simulate anything, just give the current score
-        return gameState.getScore()
+        return gameState.getScore())
 
 
-# Actually, this algorithm works bad, as in case of stopping
 class MCTSAsInHW(MCTSInterface):
     """
       A MCTS agent chooses an action using Monte-Carlo Tree Search.
@@ -213,7 +244,7 @@ class MCTSAsInHW(MCTSInterface):
                 if game_state.getPacmanPosition() == nearest_food:
                     nearest_food = None
             n_iter += 1
-        return game_state.getScore()
+        return scoreEvaluationFunction(game_state)
 
 
 class MCTS_UCB(MCTSInterface):
@@ -246,10 +277,6 @@ class MCTS_UCB(MCTSInterface):
                 self._children.append(expanded_child)
                 return expanded_child
             return self
-        
-        #def choose_best_action(self):
-        #    L = [n._total_reward for n in self._children]
-        #    return self._children[L.index(max(L))]._action
 
     def __init__(self):
         super(self.__class__, self).__init__()
@@ -297,7 +324,7 @@ class MCTS_UCB(MCTSInterface):
                 if game_state.getPacmanPosition() == nearest_food:
                     nearest_food = None
             n_iter += 1
-        return game_state.getScore()
+        return scoreEvaluationFunction(game_state)
 
 
 class MCTS_UCT(MCTSInterface):
@@ -381,4 +408,4 @@ class MCTS_UCT(MCTSInterface):
                 if game_state.getPacmanPosition() == nearest_food:
                     nearest_food = None
             n_iter += 1
-        return game_state.getScore()
+        return scoreEvaluationFunction(game_state)
