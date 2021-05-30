@@ -173,6 +173,9 @@ class MCTSAsInHW(MCTSInterface):
     def simulate(self, game_state):
         def dist_l1(pos1, pos2):
             return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
+        
+        def dist_l2(pos1, pos2):
+            return math.sqrt((pos1[0] - pos2[0])**2 + (pos1[1] - pos2[1])**2)
 
         def find_nearest_food(game_state):
             curr_pos = game_state.getPacmanPosition()
